@@ -392,12 +392,34 @@ class KedarnathTemple {
     medRim.position.set(0, 1.8 + mandapaH + roofSlopeH * 0.44, mandapaZ + mandapaL / 2 + 0.24);
     temple.add(medRim);
 
-    // Apex Golden Finial on Gable Peak
-    const pedimentGeo = new THREE.CylinderGeometry(0.01, 1.2, 0.4, 3);
-    const pediment = new THREE.Mesh(pedimentGeo, this.goldMat);
-    pediment.rotation.z = Math.PI;
-    pediment.position.set(0, 1.8 + mandapaH + roofSlopeH + 0.1, mandapaZ + mandapaL / 2 + 0.35);
-    temple.add(pediment);
+    // Apex Street Lamp / Floodlight mounted at Gable Peak (illuminating facade as in media_1788962937806.jpg)
+    const lampPole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06, 0.06, 0.85, 8),
+      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 })
+    );
+    lampPole.position.set(0, 1.8 + mandapaH + roofSlopeH + 0.35, mandapaZ + mandapaL / 2 + 0.3);
+    temple.add(lampPole);
+
+    const lampHood = new THREE.Mesh(
+      new THREE.ConeGeometry(0.35, 0.25, 12),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6, roughness: 0.4 })
+    );
+    lampHood.rotation.x = 0.4;
+    lampHood.position.set(0, 1.8 + mandapaH + roofSlopeH + 0.55, mandapaZ + mandapaL / 2 + 0.5);
+    temple.add(lampHood);
+
+    const lampBulb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xfffbeb })
+    );
+    lampBulb.position.set(0, 1.8 + mandapaH + roofSlopeH + 0.48, mandapaZ + mandapaL / 2 + 0.52);
+    temple.add(lampBulb);
+
+    const facadeSpot = new THREE.SpotLight(0xfff3d6, 3.5, 30, Math.PI / 3, 0.5, 1.2);
+    facadeSpot.position.set(0, 1.8 + mandapaH + roofSlopeH + 0.48, mandapaZ + mandapaL / 2 + 0.55);
+    facadeSpot.target.position.set(0, 1.8 + 4.5, mandapaZ + mandapaL / 2 + 1.0);
+    temple.add(facadeSpot);
+    temple.add(facadeSpot.target);
 
     // ==========================================
     // 3. FRONT FAÇADE & AUTHENTIC PAINTED ENTRANCE PORTAL
@@ -489,6 +511,15 @@ class KedarnathTemple {
       );
       halo.position.set(nicheX, nicheY + 0.6, facadeZ + 0.14);
       temple.add(halo);
+
+      // Carved stone circular rosette above niche (as seen in photo)
+      const nicheRosette = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.35, 0.38, 0.1, 16),
+        this.stoneMat
+      );
+      nicheRosette.rotation.x = Math.PI / 2;
+      nicheRosette.position.set(nicheX, nicheY + nicheH / 2 + 0.52, facadeZ + 0.04);
+      temple.add(nicheRosette);
     });
 
     // 3. Main Entrance 3D Concentric Painted Arches (Royal Blue, Golden Yellow, Vermilion Red)
@@ -547,86 +578,156 @@ class KedarnathTemple {
       temple.add(redJamb);
     });
 
-    // 4. Overhead Sacred Signboard: "।। जय श्री केदार ।।"
-    const bannerW = 6.4;
-    const bannerH = 1.35;
+    // Sacred Marigold Floral Toran draped across the entrance archway
+    const toranGroup = new THREE.Group();
+    const toranR = archRadius + 0.12;
+    for (let i = 0; i <= 16; i++) {
+      const tAngle = (i / 16) * Math.PI;
+      const tx = Math.cos(tAngle) * toranR;
+      const ty = 1.8 + doorH - 0.1 + Math.sin(tAngle) * toranR;
+      const flower = new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 8, 8),
+        (i % 2 === 0) ? this.marigoldMat : new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.85 })
+      );
+      flower.position.set(tx, ty, facadeZ + 0.16);
+      toranGroup.add(flower);
+    }
+    temple.add(toranGroup);
+
+    // 4. Overhead Sacred Signboard: "जय श्री केदार" (faithfully matching media_1788962937806.jpg)
+    const bannerW = 5.2;
+    const bannerH = 1.05;
     const bannerCanvas = document.createElement('canvas');
     bannerCanvas.width = 1024;
-    bannerCanvas.height = 220;
+    bannerCanvas.height = 200;
     const bCtx = bannerCanvas.getContext('2d');
-    bCtx.fillStyle = '#b91c1c';
-    bCtx.fillRect(0, 0, 1024, 220);
+    bCtx.fillStyle = '#c5221f';
+    bCtx.fillRect(0, 0, 1024, 200);
     bCtx.strokeStyle = '#fbbf24';
-    bCtx.lineWidth = 12;
-    bCtx.strokeRect(6, 6, 1012, 208);
+    bCtx.lineWidth = 10;
+    bCtx.strokeRect(5, 5, 1014, 190);
     bCtx.strokeStyle = '#fef08a';
-    bCtx.lineWidth = 3;
-    bCtx.strokeRect(16, 16, 992, 188);
+    bCtx.lineWidth = 2.5;
+    bCtx.strokeRect(14, 14, 996, 172);
     bCtx.fillStyle = '#ffffff';
-    bCtx.font = 'bold 84px "Poppins", "Noto Sans Devanagari", "Segoe UI", sans-serif';
+    bCtx.font = 'bold 88px "Poppins", "Noto Sans Devanagari", "Segoe UI", sans-serif';
     bCtx.textAlign = 'center';
     bCtx.textBaseline = 'middle';
-    bCtx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-    bCtx.shadowBlur = 10;
-    bCtx.fillText('।। जय श्री केदार ।।', 512, 110);
+    bCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    bCtx.shadowBlur = 8;
+    bCtx.fillText('जय श्री केदार', 512, 100);
     const bannerTex = new THREE.CanvasTexture(bannerCanvas);
 
     const bannerMesh = new THREE.Mesh(
       new THREE.BoxGeometry(bannerW, bannerH, 0.12),
-      new THREE.MeshStandardMaterial({ map: bannerTex, roughness: 0.4 })
+      new THREE.MeshStandardMaterial({ map: bannerTex, roughness: 0.45 })
     );
-    bannerMesh.position.set(0, 1.8 + doorH + bannerH / 2 + 0.25, facadeZ + 0.16);
+    bannerMesh.position.set(0, 1.8 + doorH + bannerH / 2 + 0.12, facadeZ + 0.16);
     bannerMesh.castShadow = true;
     temple.add(bannerMesh);
 
-    // Carved Stone Pediment Arch above the Signboard
+    // Chandrasala Carved Radiating Stone Arch above the Signboard
     const pedArch = new THREE.Mesh(
-      new THREE.TorusGeometry(bannerW * 0.45, 0.16, 8, 24, Math.PI),
+      new THREE.TorusGeometry(2.35, 0.18, 12, 32, Math.PI),
       this.stoneMat
     );
-    pedArch.position.set(0, 1.8 + doorH + bannerH + 0.35, facadeZ + 0.14);
+    pedArch.position.set(0, 1.8 + doorH + bannerH + 0.20, facadeZ + 0.13);
     temple.add(pedArch);
 
-    // Iconic Yellow/Orange Welcome Arch Gateway on Front Steps (as seen in photo 3 & temple_front_steps.png)
-    const stepArchGroup = new THREE.Group();
-    const archZ = 19.5;
-    const archPillarMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.7 });
-    
-    // Left step arch post
-    const leftArchPost = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.8, 0.5), archPillarMat);
-    leftArchPost.position.set(-3.2, 1.9, archZ);
-    stepArchGroup.add(leftArchPost);
+    // Radiating carved stone voussoirs
+    for (let a = 0; a <= 12; a++) {
+      const angle = (a / 12) * Math.PI;
+      const vx = Math.cos(angle) * 2.35;
+      const vy = 1.8 + doorH + bannerH + 0.20 + Math.sin(angle) * 2.35;
+      const vRib = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.42, 0.15),
+        this.stoneMat
+      );
+      vRib.rotation.z = angle - Math.PI / 2;
+      vRib.position.set(vx, vy, facadeZ + 0.14);
+      temple.add(vRib);
+    }
 
-    // Right step arch post
-    const rightArchPost = leftArchPost.clone();
-    rightArchPost.position.x = 3.2;
-    stepArchGroup.add(rightArchPost);
-
-    // Cross beam wrapped in yellow/orange ceremonial fabric
-    const crossBeam = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.6, 0.55), archPillarMat);
-    crossBeam.position.set(0, 3.8, archZ);
-    stepArchGroup.add(crossBeam);
-
-    // Central brass bell hanging from step arch
-    const archBell = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.35, 12), this.brassMat);
-    archBell.position.set(0, 3.2, archZ);
-    stepArchGroup.add(archBell);
-
-    // Colliders for step arch posts
-    this.colliders.push(
-      new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(-3.2, 2.0, archZ),
-        new THREE.Vector3(0.6, 4.0, 0.6)
-      )
+    // Carved central stone rosette medallion inside the Chandrasala
+    const archRosette = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.48, 0.52, 0.12, 20),
+      this.stoneMat
     );
-    this.colliders.push(
-      new THREE.Box3().setFromCenterAndSize(
-        new THREE.Vector3(3.2, 2.0, archZ),
-        new THREE.Vector3(0.6, 4.0, 0.6)
-      )
-    );
+    archRosette.rotation.x = Math.PI / 2;
+    archRosette.position.set(0, 1.8 + doorH + bannerH + 1.25, facadeZ + 0.14);
+    temple.add(archRosette);
 
-    temple.add(stepArchGroup);
+    // 5. Authentic Stainless Steel Courtyard Railing & Yellow Donation Box ("दान पात्र")
+    // Directly as photographed in media_1788962937806.jpg!
+    const frontRailGroup = new THREE.Group();
+    const railZ = 20.2;
+
+    // Horizontal top and bottom stainless steel rails
+    [-1, 1].forEach(side => {
+      const railLen = 6.4;
+      const railCX = side * 5.6;
+      [0.95, 0.18].forEach(ry => {
+        const hRail = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.04, 0.04, railLen, 12),
+          this.steelMat
+        );
+        hRail.rotation.z = Math.PI / 2;
+        hRail.position.set(railCX, ry, railZ);
+        hRail.castShadow = true;
+        frontRailGroup.add(hRail);
+      });
+
+      // Vertical stainless steel balusters
+      const balusterCount = 14;
+      for (let b = 0; b <= balusterCount; b++) {
+        const bx = railCX - railLen / 2 + (b / balusterCount) * railLen;
+        const baluster = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.025, 0.025, 0.95, 8),
+          this.steelMat
+        );
+        baluster.position.set(bx, 0.56, railZ);
+        baluster.castShadow = true;
+        frontRailGroup.add(baluster);
+      }
+    });
+
+    temple.add(frontRailGroup);
+
+    // Iconic Yellow Donation Box (दान पात्र) positioned by the front railing
+    const boxCanvas = document.createElement('canvas');
+    boxCanvas.width = 512;
+    boxCanvas.height = 512;
+    const bctx = boxCanvas.getContext('2d');
+    bctx.fillStyle = '#f59e0b';
+    bctx.fillRect(0, 0, 512, 512);
+    bctx.fillStyle = '#ffffff';
+    bctx.fillRect(40, 140, 432, 232);
+    bctx.strokeStyle = '#c5221f';
+    bctx.lineWidth = 6;
+    bctx.strokeRect(48, 148, 416, 216);
+    bctx.fillStyle = '#c5221f';
+    bctx.font = 'bold 56px "Noto Sans Devanagari", sans-serif';
+    bctx.textAlign = 'center';
+    bctx.fillText('दान पात्र', 256, 230);
+    bctx.font = 'bold 36px "Noto Sans Devanagari", sans-serif';
+    bctx.fillText('जय श्री केदार', 256, 310);
+    const boxTex = new THREE.CanvasTexture(boxCanvas);
+
+    const donationBox = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 1.1, 0.65),
+      [
+        this.nandiPedestalYellowMat,
+        this.nandiPedestalYellowMat,
+        this.nandiPedestalYellowMat,
+        this.nandiPedestalYellowMat,
+        new THREE.MeshStandardMaterial({ map: boxTex, roughness: 0.45 }),
+        this.nandiPedestalYellowMat
+      ]
+    );
+    donationBox.position.set(3.4, 0.65, railZ + 0.45);
+    donationBox.castShadow = true;
+    donationBox.receiveShadow = true;
+    temple.add(donationBox);
 
     // Golden Roofline Lights (Illuminating the front phase at night/evening aarti - as in temple_front_night.jpg)
     this.nightRoofLights = [];
@@ -711,12 +812,88 @@ class KedarnathTemple {
     }
 
     // ==========================================
+    // 4b. ICONIC FRONT-FACING MINIATURE SHRINE (AEDICULE) ON SHIKHARA TOWER
+    // Directly photographed in media_1788962937806.jpg on the front face of the tower!
+    // ==========================================
+    const towerShrineGroup = new THREE.Group();
+    const t3H = tierH + 0.1;
+    const t3Y = 1.8 + shikharaBaseH + 3 * t3H;
+    const t3L = shikharaBaseL - 3 * 0.65;
+    const t3Z = shikharaZ + t3L / 2 + 0.05;
+
+    // Shrine base plinth with Cobalt Blue moulding
+    const tShrinePlinth = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.35, 0.7),
+      this.blueSolidMat
+    );
+    tShrinePlinth.position.set(0, t3Y + 0.2, t3Z + 0.25);
+    towerShrineGroup.add(tShrinePlinth);
+
+    // Left & right golden pilaster columns
+    [-0.62, 0.62].forEach(px => {
+      const pCol = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 1.4, 0.18),
+        this.paintedYellowMat
+      );
+      pCol.position.set(px, t3Y + 0.95, t3Z + 0.28);
+      towerShrineGroup.add(pCol);
+    });
+
+    // Dark niche recess
+    const tShrineRecess = new THREE.Mesh(
+      new THREE.BoxGeometry(1.05, 1.35, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 })
+    );
+    tShrineRecess.position.set(0, t3Y + 0.95, t3Z + 0.18);
+    towerShrineGroup.add(tShrineRecess);
+
+    // Gilded Deity Idol (Murti in Pranam Mudra)
+    const deityIdolBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.28, 0.9, 10),
+      this.goldMat
+    );
+    deityIdolBody.position.set(0, t3Y + 0.75, t3Z + 0.28);
+    towerShrineGroup.add(deityIdolBody);
+
+    const deityIdolHead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 10, 10),
+      this.goldMat
+    );
+    deityIdolHead.position.set(0, t3Y + 1.25, t3Z + 0.28);
+    towerShrineGroup.add(deityIdolHead);
+
+    const deityHalo = new THREE.Mesh(
+      new THREE.TorusGeometry(0.22, 0.03, 8, 16),
+      this.goldMat
+    );
+    deityHalo.position.set(0, t3Y + 1.25, t3Z + 0.30);
+    towerShrineGroup.add(deityHalo);
+
+    // Cobalt Blue Arched Roof Frame
+    const tShrineArch = new THREE.Mesh(
+      new THREE.TorusGeometry(0.62, 0.12, 8, 20, Math.PI),
+      this.blueSolidMat
+    );
+    tShrineArch.position.set(0, t3Y + 1.55, t3Z + 0.28);
+    towerShrineGroup.add(tShrineArch);
+
+    // Golden Miniature Finial on Shrine Peak
+    const tShrineFinial = new THREE.Mesh(
+      new THREE.ConeGeometry(0.12, 0.45, 8),
+      this.goldMat
+    );
+    tShrineFinial.position.set(0, t3Y + 2.3, t3Z + 0.28);
+    towerShrineGroup.add(tShrineFinial);
+
+    temple.add(towerShrineGroup);
+
+    // ==========================================
     // 5. TRADITIONAL PAHARI WOODEN PAVILION & AMALAKA
-    // Modeled faithfully from media_1788949789932.png & media_1788949814007.jpg
+    // Modeled faithfully from media_1788962937806.jpg & ancient Deodar timber architecture
     // ==========================================
     const pavW = currW * 0.95;
     const pavH = 1.4;
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x4a2810, roughness: 0.75 }); // Dark Himalayan deodar timber
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.75 }); // Dark Himalayan deodar timber
 
     // Wooden base cornice platform
     const pavBase = new THREE.Mesh(new THREE.BoxGeometry(pavW + 0.3, 0.25, pavW + 0.3), woodMat);
@@ -732,17 +909,31 @@ class KedarnathTemple {
       col.position.set(px * colOffset, currY + 0.25 + pavH / 2, shikharaZ + pz * colOffset);
       col.castShadow = true;
       temple.add(col);
+
+      // Warm hanging lantern under each corner eave
+      const cornerLamp = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0xffe082, emissive: 0xffaa00, emissiveIntensity: 0.9 })
+      );
+      cornerLamp.position.set(px * (colOffset + 0.25), currY + pavH + 0.1, shikharaZ + pz * (colOffset + 0.25));
+      temple.add(cornerLamp);
     });
 
-    // Decorative Vermilion Red / Gold Balcony Panels between pillars
-    [[-1, 0, pavW - 0.4, 0.3], [1, 0, pavW - 0.4, 0.3], [0, -1, 0.3, pavW - 0.4], [0, 1, 0.3, pavW - 0.4]].forEach(([rx, rz, rw, rl]) => {
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(rw, 0.5, rl), this.paintedRedMat);
-      panel.position.set(rx * colOffset, currY + 0.55, shikharaZ + rz * colOffset);
+    // Decorative Alternating Festive Balcony Panels (Red, Yellow, Blue valance festoons)
+    const valanceColors = [this.paintedRedMat, this.paintedYellowMat, this.blueSolidMat, this.paintedRedMat];
+    [
+      [-1, 0, pavW - 0.4, 0.35],
+      [1, 0, pavW - 0.4, 0.35],
+      [0, -1, 0.35, pavW - 0.4],
+      [0, 1, 0.35, pavW - 0.4]
+    ].forEach(([rx, rz, rw, rl], fIdx) => {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(rw, 0.48, rl), valanceColors[fIdx % valanceColors.length]);
+      panel.position.set(rx * colOffset, currY + 0.52, shikharaZ + rz * colOffset);
       temple.add(panel);
     });
 
     // Warm golden diya illumination inside the pavilion
-    const pavLight = new THREE.PointLight(0xffb74d, 1.2, 12, 1.8);
+    const pavLight = new THREE.PointLight(0xffb74d, 1.4, 14, 1.8);
     pavLight.position.set(0, currY + pavH * 0.6, shikharaZ);
     temple.add(pavLight);
 
