@@ -53,6 +53,7 @@ class ControllerManager {
     this.raycaster = new THREE.Raycaster();
     this.centerScreen = new THREE.Vector2(0, 0);
     this.hoveredBell = null;
+    this.hoveredTempleFront = false;
 
     this.initKeyboard();
     this.initPointerLock();
@@ -90,21 +91,81 @@ class ControllerManager {
   initPointerLock() {
     const canvas = this.renderer.domElement;
 
-    canvas.addEventListener('click', () => {
-      if (this.hoveredSanctum) {
-        const modal = document.getElementById('sanctum-modal');
-        if (modal) modal.classList.add('active');
+    canvas.addEventListener('click', (e) => {
+      let targetTempleFront = this.hoveredTempleFront;
+      let targetSanctum = this.hoveredSanctum;
+      let targetNandi = this.hoveredNandi;
+      let targetBhim = this.hoveredBhimShila;
+      let targetBell = this.hoveredBell;
+
+      // When pointer is NOT locked, raycast directly from the mouse click pixel coordinates
+      if (!this.isLocked) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        const clickRay = new THREE.Raycaster();
+        clickRay.setFromCamera({ x: mouseX, y: mouseY }, this.camera);
+
+        // Check temple front (when in courtyard outside)
+        if (this.temple.templeFrontMeshes && this.camera.position.z >= 13.0) {
+          const hits = clickRay.intersectObjects(this.temple.templeFrontMeshes, true);
+          if (hits.length > 0 && hits[0].distance < 45.0) targetTempleFront = true;
+        }
+
+        // Check sanctum (when inside)
+        if (this.temple.sanctumMeshes && this.camera.position.z < 14.0) {
+          const hits = clickRay.intersectObjects(this.temple.sanctumMeshes, true);
+          if (hits.length > 0 && hits[0].distance < 16.0) targetSanctum = true;
+        }
+
+        // Check Nandi
+        if (this.temple.nandiMeshes) {
+          const hits = clickRay.intersectObjects(this.temple.nandiMeshes, true);
+          if (hits.length > 0 && hits[0].distance < 14.0) targetNandi = true;
+        }
+
+        // Check Bhim Shila
+        if (this.temple.bhimShilaMeshes) {
+          const hits = clickRay.intersectObjects(this.temple.bhimShilaMeshes, true);
+          if (hits.length > 0 && hits[0].distance < 22.0) targetBhim = true;
+        }
+
+        // Check bells
+        const bellMeshes = this.temple.bells.map(b => b.mesh);
+        const bellHits = clickRay.intersectObjects(bellMeshes, true);
+        if (bellHits.length > 0 && bellHits[0].distance < 9.0) targetBell = bellHits[0].object;
+      }
+
+      if (targetTempleFront) {
+        const modal = document.getElementById('temple-photos-modal');
+        if (modal) {
+          modal.classList.add('active');
+          if (document.exitPointerLock) document.exitPointerLock();
+        }
         if (window.soundEngine) window.soundEngine.playTempleBell(1.0);
-      } else if (this.hoveredNandi) {
+      } else if (targetSanctum) {
+        const modal = document.getElementById('sanctum-modal');
+        if (modal) {
+          modal.classList.add('active');
+          if (document.exitPointerLock) document.exitPointerLock();
+        }
+        if (window.soundEngine) window.soundEngine.playTempleBell(1.0);
+      } else if (targetNandi) {
         const modal = document.getElementById('nandi-modal');
-        if (modal) modal.classList.add('active');
+        if (modal) {
+          modal.classList.add('active');
+          if (document.exitPointerLock) document.exitPointerLock();
+        }
         if (window.soundEngine) window.soundEngine.playTempleBell(0.8);
-      } else if (this.hoveredBhimShila) {
+      } else if (targetBhim) {
         const modal = document.getElementById('bhimshila-modal');
-        if (modal) modal.classList.add('active');
+        if (modal) {
+          modal.classList.add('active');
+          if (document.exitPointerLock) document.exitPointerLock();
+        }
         if (window.soundEngine) window.soundEngine.playTempleBell(0.9);
-      } else if (this.hoveredBell) {
-        this.temple.ringBell(this.hoveredBell.userData.bellIndex);
+      } else if (targetBell) {
+        this.temple.ringBell(targetBell.userData.bellIndex);
       } else if (this.mode === 'walk' && !this.isLocked) {
         canvas.requestPointerLock();
       }
@@ -526,15 +587,31 @@ class ControllerManager {
       }
     }
 
-    // 3. Check raycasting against Sanctum Lingam Altar
+    // 3. Check raycasting against Sanctum Lingam Altar (when inside)
     this.hoveredSanctum = false;
-    if (this.temple.sanctumMeshes) {
+    if (this.temple.sanctumMeshes && this.camera.position.z < 14.0) {
       const sanctumIntersects = this.raycaster.intersectObjects(this.temple.sanctumMeshes, true);
       if (sanctumIntersects.length > 0 && sanctumIntersects[0].distance < 14.0) {
         this.hoveredSanctum = true;
+        this.hoveredTempleFront = false;
         if (crosshair) crosshair.classList.add('interactable');
         if (hint) {
           hint.textContent = '🪔 Click to view Real Photos of Kedarnath Swayambhu Jyotirlinga';
+          hint.classList.add('visible');
+        }
+        return;
+      }
+    }
+
+    // 3b. Check raycasting against Temple Front Facade (when outside in courtyard)
+    this.hoveredTempleFront = false;
+    if (this.temple.templeFrontMeshes && this.camera.position.z >= 13.0) {
+      const frontIntersects = this.raycaster.intersectObjects(this.temple.templeFrontMeshes, true);
+      if (frontIntersects.length > 0 && frontIntersects[0].distance < 45.0) {
+        this.hoveredTempleFront = true;
+        if (crosshair) crosshair.classList.add('interactable');
+        if (hint) {
+          hint.textContent = '🏛️ Click to view Authentic Temple Photos & Darshan';
           hint.classList.add('visible');
         }
         return;

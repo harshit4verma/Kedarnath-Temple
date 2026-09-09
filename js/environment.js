@@ -240,10 +240,10 @@ class HimalayanEnvironment {
     const courtyardTex = TextureGenerator.getCourtyardTexture();
     const courtMat = new THREE.MeshStandardMaterial({
       map: courtyardTex,
-      roughness: 0.75,
-      metalness: 0.15,
+      roughness: 0.42,
+      metalness: 0.22,
       bumpMap: courtyardTex,
-      bumpScale: 0.08
+      bumpScale: 0.05
     });
 
     // Main paved platform extended back to Z = -42 (covers full area behind Bhim Shila)

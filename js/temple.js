@@ -13,6 +13,7 @@ class KedarnathTemple {
     this.flags = [];
     this.colliders = []; // For first-person collision detection
     this.bhimShilaMeshes = []; // For Bhim Shila raycasting and darshan
+    this.templeFrontMeshes = []; // For temple front raycasting and authentic photo darshan
     
     this.initMaterials();
     this.buildTemple();
@@ -746,6 +747,33 @@ class KedarnathTemple {
       this.nightRoofLights.push(bulb);
     }
 
+    // Wide front raycast hit sensor to reliably capture clicks anywhere on the front facade
+    const frontSensor = new THREE.Mesh(
+      new THREE.BoxGeometry(mandapaW + 2.0, mandapaH + roofSlopeH + 2.0, 3.5),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.0, depthWrite: false })
+    );
+    frontSensor.position.set(0, 1.8 + mandapaH / 2 + 2.0, facadeZ + 0.5);
+    temple.add(frontSensor);
+
+    this.templeFrontMeshes = [
+      frontSensor,
+      bannerMesh,
+      frontLeft,
+      frontRight,
+      frontLintel,
+      pedWall,
+      medallion,
+      outerBlueArch,
+      middleYellowArch,
+      innerRedArch,
+      pedArch,
+      archRosette,
+      donationBox,
+      bottomEaveTrim,
+      leftEaveTrim,
+      rightEaveTrim
+    ];
+
     // ==========================================
     // 4. SHIKHARA (The Majestic Katyuri Stone Tower)
     // ==========================================
@@ -1361,31 +1389,31 @@ class KedarnathTemple {
     const marigoldOrange = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.85 });
     const bilvaGreen = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 });
 
-    // 2. Raised Stone Pedestal (Himalayan granite with festive red & yellow painted borders)
+    // 2. Authentic Raised Painted Pedestal (Bright Golden Yellow Body & Royal Blue Mouldings as in media_1788962937806.jpg)
     const plinthMesh = new THREE.Mesh(
       new THREE.BoxGeometry(4.2, 1.2, 5.4),
-      this.stoneMat
+      this.nandiPedestalYellowMat
     );
     plinthMesh.position.set(0, 0.6, nandiZ);
     plinthMesh.receiveShadow = true;
     plinthMesh.castShadow = true;
     nandiGroup.add(plinthMesh);
 
-    // Red festive top border cloth/trim around pedestal (matching photo media_1788940513379.png)
-    const topRedBorder = new THREE.Mesh(
-      new THREE.BoxGeometry(4.32, 0.18, 5.52),
-      new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.75 })
+    // Royal Blue top moulding around pedestal (directly matching reference photo)
+    const topBlueBorder = new THREE.Mesh(
+      new THREE.BoxGeometry(4.36, 0.22, 5.56),
+      this.nandiPedestalBlueMat
     );
-    topRedBorder.position.set(0, 1.15, nandiZ);
-    nandiGroup.add(topRedBorder);
+    topBlueBorder.position.set(0, 1.15, nandiZ);
+    nandiGroup.add(topBlueBorder);
 
-    // Yellow festive base trim around bottom of pedestal
-    const bottomYellowBorder = new THREE.Mesh(
-      new THREE.BoxGeometry(4.38, 0.18, 5.58),
-      new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 })
+    // Royal Blue base moulding around bottom of pedestal
+    const bottomBlueBorder = new THREE.Mesh(
+      new THREE.BoxGeometry(4.42, 0.20, 5.62),
+      this.nandiPedestalBlueMat
     );
-    bottomYellowBorder.position.set(0, 0.12, nandiZ);
-    nandiGroup.add(bottomYellowBorder);
+    bottomBlueBorder.position.set(0, 0.10, nandiZ);
+    nandiGroup.add(bottomBlueBorder);
 
     // Flower petal offerings and bilva patra scattered on the pedestal
     for (let p = 0; p < 28; p++) {
@@ -1473,6 +1501,31 @@ class KedarnathTemple {
     humpMesh.rotation.x = 0.22; // Gently sloping backward
     humpMesh.position.set(0, 1.86, -0.42);
     addSculpt(humpMesh);
+
+    // Sacred Saffron/Yellow Ceremonial Cloth (Jhool) draped over Nandi's back and hump (as in media_1788962937806.jpg)
+    const jhoolMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      roughness: 0.7,
+      metalness: 0.05,
+      side: THREE.DoubleSide
+    });
+    const jhoolMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1.24, 24, 18, 0, Math.PI * 2, 0, Math.PI / 2.2),
+      jhoolMat
+    );
+    jhoolMesh.scale.set(1.15, 0.95, 1.4);
+    jhoolMesh.position.set(0, 1.05, 0.2);
+    addSculpt(jhoolMesh);
+
+    // Gold border trim around the ceremonial cloth
+    const jhoolTrim = new THREE.Mesh(
+      new THREE.TorusGeometry(1.26, 0.04, 8, 28),
+      this.goldMat
+    );
+    jhoolTrim.scale.set(1.15, 1.4, 1.0);
+    jhoolTrim.rotation.x = Math.PI / 2;
+    jhoolTrim.position.set(0, 0.65, 0.2);
+    addSculpt(jhoolTrim);
 
     // D. POWERFUL ARCHED NECK (Angled upward at ~42° towards temple)
     const neckGeo = new THREE.CylinderGeometry(0.68, 0.9, 1.2, 28);
@@ -1899,221 +1952,489 @@ class KedarnathTemple {
     });
   }
 
-  // Inner Sanctum (Garbhagriha) details: Swayambhu Lingam, REAL PHOTOS, golden walls & Chhatra
-  // DIRECTLY VISIBLE FROM THE FRONT FACE ("From phase of the temple")!
+  // Inner Sanctum (Garbhagriha) details: Reconstructed faithfully from user photos
+  // media_1788971827073.png, media_1788971874791.png, and media_1788971900497.png!
+  // DIRECTLY VISIBLE FROM THE FRONT ENTRANCE DOORWAY!
   buildSanctumInterior() {
     const sanctumZ = 4.0; // Enshrined deep inside the temple, directly visible through front door!
     const texLoader = new THREE.TextureLoader();
 
-    // Load authentic sanctum photos
-    const sanctumGoldTex = texLoader.load('assets/sanctum_gold_lingam.png');
-    const sanctumPriestsTex = texLoader.load('assets/sanctum_priests.png');
-    const lingamDarshanTex = texLoader.load('assets/sanctum_lingam_darshan.jpg');
-    const bilvaTex = texLoader.load('assets/sanctum_bilva.png');
+    // Authentic sanctum photos provided by the user
+    const realGoldTex = texLoader.load('assets/sanctum_darshan_real_gold.png');
+    const realSilverTex = texLoader.load('assets/sanctum_darshan_real_silver.png');
+    const realPujaTex = texLoader.load('assets/sanctum_darshan_real_puja.png');
 
     const sanctumGroup = new THREE.Group();
 
-    // 1. Embossed Gold & Silver Sanctum Back Wall (as in sanctum_gold_lingam.png & sanctum_priests.png)
+    // =========================================================================
+    // 1. EMBOSSED GOLD & SILVER REPOUSSÉ WALLS (Photos 1, 2, 3)
+    // =========================================================================
+    // Back Sanctum Wall: Intricately embossed gold repoussé sheets with sacred mantras
+    const backWallMat = new THREE.MeshStandardMaterial({
+      map: realGoldTex,
+      roughness: 0.32,
+      metalness: 0.72,
+      emissive: 0x442800,
+      emissiveIntensity: 0.25
+    });
     const backWallMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(10.5, 7.5),
-      new THREE.MeshStandardMaterial({
-        map: sanctumGoldTex,
-        roughness: 0.35,
-        metalness: 0.65,
-        emissive: 0x332200,
-        emissiveIntensity: 0.2
-      })
+      backWallMat
     );
     backWallMesh.position.set(0, 5.0, 1.2);
     sanctumGroup.add(backWallMesh);
 
-    // Embossed Left Sanctum Wall
+    // Left Sanctum Wall: Silver-embossed repoussé wall with murtis backdrop (Photo 2)
+    const leftWallMat = new THREE.MeshStandardMaterial({
+      map: realSilverTex,
+      roughness: 0.35,
+      metalness: 0.65,
+      emissive: 0x222222,
+      emissiveIntensity: 0.15
+    });
     const leftInnerWall = new THREE.Mesh(
       new THREE.PlaneGeometry(12.0, 7.5),
-      new THREE.MeshStandardMaterial({
-        map: sanctumPriestsTex,
-        roughness: 0.4,
-        metalness: 0.6
-      })
+      leftWallMat
     );
     leftInnerWall.rotation.y = Math.PI / 2;
     leftInnerWall.position.set(-5.3, 5.0, 7.0);
     sanctumGroup.add(leftInnerWall);
 
-    // Embossed Right Sanctum Wall
+    // Right Sanctum Wall: Golden embossed panel wall (Photo 3)
     const rightInnerWall = new THREE.Mesh(
       new THREE.PlaneGeometry(12.0, 7.5),
-      new THREE.MeshStandardMaterial({
-        map: sanctumGoldTex,
-        roughness: 0.4,
-        metalness: 0.6
-      })
+      backWallMat
     );
     rightInnerWall.rotation.y = -Math.PI / 2;
     rightInnerWall.position.set(5.3, 5.0, 7.0);
     sanctumGroup.add(rightInnerWall);
 
-    // 2. High-Resolution Sacred Swayambhu Lingam Altar with Real Photo
-    // Central Altar Pedestal with Golden Border (matching sanctum_gold_lingam.png)
-    const peethamMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(4.2, 0.45, 3.6),
-      this.goldMat
+    // Back Wall Built-In Carved Stone Niche Shrine for Akhand Jyot (Photos 1 & 2)
+    const wallNiche = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 1.6, 0.4),
+      new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.9 })
     );
-    peethamMesh.position.set(0, 2.1, sanctumZ);
-    peethamMesh.receiveShadow = true;
-    sanctumGroup.add(peethamMesh);
+    wallNiche.position.set(2.4, 5.2, 1.35);
+    sanctumGroup.add(wallNiche);
 
-    // Silver inner tier of the peetham
-    const silverTier = new THREE.Mesh(
-      new THREE.BoxGeometry(3.6, 0.25, 3.0),
-      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 })
+    const nicheLamp = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.1, 0.12, 10),
+      this.brassMat
     );
-    silverTier.position.set(0, 2.4, sanctumZ);
-    sanctumGroup.add(silverTier);
+    nicheLamp.position.set(2.4, 4.6, 1.45);
+    sanctumGroup.add(nicheLamp);
 
-    // The Holy Swayambhu Lingam - Sculpted Triangular Natural Rock (resembling Sadashiva's hump)
-    // Textured with the real close-up photo of the sacred Kedarnath Lingam!
-    const lingamGeo = new THREE.ConeGeometry(1.3, 1.8, 8);
-    const lingamMat = new THREE.MeshStandardMaterial({
-      map: lingamDarshanTex,
-      roughness: 0.5,
-      metalness: 0.2,
-      bumpMap: lingamDarshanTex,
+    const nicheFlame = new THREE.Mesh(
+      new THREE.ConeGeometry(0.06, 0.2, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffaa00 })
+    );
+    nicheFlame.position.set(2.4, 4.75, 1.45);
+    sanctumGroup.add(nicheFlame);
+
+    // =========================================================================
+    // 2. ANCIENT CARVED KATYURI SANCTUM PILLARS (Photos 2 & 3)
+    // =========================================================================
+    [-4.6, 4.6].forEach(px => {
+      const pillarGroup = new THREE.Group();
+      pillarGroup.position.set(px, 1.9, sanctumZ + 2.4);
+
+      // Square carved base
+      const pBase = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.9), this.stoneMat);
+      pBase.position.y = 0.4;
+      pillarGroup.add(pBase);
+
+      // Chamfered octagonal shaft
+      const pShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 4.8, 8), this.stoneMat);
+      pShaft.position.y = 3.2;
+      pillarGroup.add(pShaft);
+
+      // Fluted capital & bracket lintel
+      const pCap = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.38, 0.4, 16), this.stoneMat);
+      pCap.position.y = 5.8;
+      pillarGroup.add(pCap);
+
+      const pBracket = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.3, 1.1), this.stoneMat);
+      pBracket.position.y = 6.1;
+      pillarGroup.add(pBracket);
+
+      sanctumGroup.add(pillarGroup);
+    });
+
+    // =========================================================================
+    // 3. THE HOLY SWAYAMBHU JYOTIRLINGAM - NATURAL TRIANGULAR ROCK (Photos 1, 2, 3)
+    // Lord Shiva's divine hump: natural irregular triangular monolith
+    // =========================================================================
+    const lingamW = 2.4;
+    const lingamH = 1.75;
+    const lingamD = 2.0;
+
+    const lingamGeo = new THREE.ConeGeometry(1.25, lingamH, 16, 12);
+    // Perturb vertices for natural organic rock face & Sadashiva hump ridge
+    const lPos = lingamGeo.attributes.position;
+    for (let i = 0; i < lPos.count; i++) {
+      let vx = lPos.getX(i);
+      let vy = lPos.getY(i);
+      let vz = lPos.getZ(i);
+
+      // Flatten base
+      if (vy < -lingamH * 0.4) {
+        vy = -lingamH * 0.4;
+      }
+      // Asymmetric natural mountain rock contours
+      const rockNoise = Math.sin(vx * 3.5) * 0.12 + Math.cos(vz * 3.0) * 0.14 + Math.sin(vy * 4.0) * 0.08;
+      // Prominent spine ridge along the center
+      const ridge = Math.exp(-vx * vx * 4.0) * 0.18;
+      lPos.setXYZ(i, vx * 1.15 + rockNoise * 0.3, vy + ridge * 0.2, vz * 0.95 + rockNoise * 0.3);
+    }
+    lingamGeo.computeVertexNormals();
+
+    // Authentic dark glistening sacred stone material (with sacred ghee / abhishek patina)
+    const holyRockMat = new THREE.MeshStandardMaterial({
+      color: 0x26231f,
+      roughness: 0.38,
+      metalness: 0.20,
       bumpScale: 0.25
     });
-    const lingam = new THREE.Mesh(lingamGeo, lingamMat);
-    lingam.position.set(0, 3.2, sanctumZ);
-    lingam.castShadow = true;
-    sanctumGroup.add(lingam);
+    const lingamMesh = new THREE.Mesh(lingamGeo, holyRockMat);
+    lingamMesh.position.set(0, 2.5 + lingamH / 2, sanctumZ);
+    lingamMesh.castShadow = true;
+    lingamMesh.receiveShadow = true;
+    sanctumGroup.add(lingamMesh);
 
-    // Saffron/Orange Sacred Vastra Cloth draped over the Lingam (as seen in sanctum_gold_lingam.png)
-    const vastraMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.2, 0.9),
-      this.saffronMat
-    );
-    vastraMesh.position.set(0, 3.2, sanctumZ + 0.9);
-    sanctumGroup.add(vastraMesh);
+    // Sacred Yellow Sandalwood (Chandan) / Turmeric (Haldi) Vertical Stripes (Photos 1, 2, 3)
+    const chandanMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      roughness: 0.6,
+      emissive: 0x443300,
+      emissiveIntensity: 0.25,
+      side: THREE.DoubleSide
+    });
+    [-0.22, 0.0, 0.22].forEach(cx => {
+      const stripeCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(cx * 0.3, 3.25, sanctumZ + 0.15),
+        new THREE.Vector3(cx * 0.65, 2.85, sanctumZ + 0.65),
+        new THREE.Vector3(cx * 0.95, 2.45, sanctumZ + 1.05)
+      ]);
+      const stripeGeo = new THREE.TubeGeometry(stripeCurve, 14, 0.045, 6, false);
+      const stripeMesh = new THREE.Mesh(stripeGeo, chandanMat);
+      sanctumGroup.add(stripeMesh);
+    });
 
-    // Real Photo Altar Showcase Panel directly behind Lingam for pristine darshan
-    const photoStandMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.4, 1.8),
-      new THREE.MeshStandardMaterial({
-        map: sanctumGoldTex,
-        roughness: 0.3,
-        metalness: 0.2,
-        emissive: 0x443000,
-        emissiveIntensity: 0.15
-      })
-    );
-    photoStandMesh.position.set(0, 3.6, sanctumZ - 1.2);
-    sanctumGroup.add(photoStandMesh);
+    // Fresh Bilva Patra leaves & marigold flowers adorning the rock
+    for (let fl = 0; fl < 35; fl++) {
+      const angle = Math.random() * Math.PI * 2;
+      const rad = 0.35 + Math.random() * 0.85;
+      const fx = Math.cos(angle) * rad;
+      const fz = sanctumZ + Math.sin(angle) * rad * 0.85;
+      const fy = 2.45 + (1 - rad / 1.2) * 0.65;
+      const isGreen = Math.random() > 0.55;
+      const isRose = !isGreen && Math.random() > 0.5;
+      const flowerColor = isGreen ? 0x16a34a : (isRose ? 0xf43f5e : 0xf59e0b);
+      const flMat = new THREE.MeshStandardMaterial({ color: flowerColor, roughness: 0.8 });
+      const flMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.03, 6), flMat);
+      flMesh.position.set(fx, fy, fz);
+      sanctumGroup.add(flMesh);
+    }
 
-    // Golden frame around the photo stand
-    const standFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(2.5, 1.9, 0.08),
+    // =========================================================================
+    // 4. STEPPED GOLDEN & SILVER JALHARI PEETHAM (ALTAR BASE) (Photos 1, 2, 3)
+    // =========================================================================
+    // Lower stepped golden base with sacred inscription border (Photo 3)
+    const lowerPeetham = new THREE.Mesh(
+      new THREE.BoxGeometry(4.6, 0.35, 4.0),
       this.goldMat
     );
-    standFrame.position.set(0, 3.6, sanctumZ - 1.25);
-    sanctumGroup.add(standFrame);
+    lowerPeetham.position.set(0, 2.05, sanctumZ);
+    lowerPeetham.receiveShadow = true;
+    sanctumGroup.add(lowerPeetham);
 
-    // 3. Hanging Silver Chhatra (Canopy Chandelier with bells directly over the Lingam)
-    // Perfectly matching sanctum_priests.png and sanctum_bilva.png
-    const chhatraGroup = new THREE.Group();
-    chhatraGroup.position.set(0, 6.2, sanctumZ);
-
-    // Hanging silver chain
-    const hangChain = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.04, 0.04, 2.2, 8),
-      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 })
+    // Middle stepped golden tier
+    const midPeetham = new THREE.Mesh(
+      new THREE.BoxGeometry(4.1, 0.28, 3.5),
+      this.goldMat
     );
-    hangChain.position.y = 1.1;
+    midPeetham.position.set(0, 2.36, sanctumZ);
+    midPeetham.receiveShadow = true;
+    sanctumGroup.add(midPeetham);
+
+    // Silver inner Jalhari basin framing the rock base (Photos 1 & 2)
+    const jalhariRim = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 0.22, 3.0),
+      this.silverMat
+    );
+    jalhariRim.position.set(0, 2.58, sanctumZ);
+    sanctumGroup.add(jalhariRim);
+
+    // 4 Corner Gilded Kalash Knobs on Peetham (Photo 3)
+    [
+      [-1.9, -1.6], [1.9, -1.6], [-1.9, 1.6], [1.9, 1.6]
+    ].forEach(([kx, kz]) => {
+      const knob = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 12, 12),
+        this.goldMat
+      );
+      knob.position.set(kx, 2.75, sanctumZ + kz);
+      sanctumGroup.add(knob);
+    });
+
+    // Traditional Hammered Copper & Brass Lotas (Water Kalash Pots) on ledge (Photos 1, 2, 3)
+    const potLocations = [
+      { x: 1.45, z: sanctumZ + 1.25, mat: this.copperMat },
+      { x: -1.45, z: sanctumZ + 1.25, mat: this.brassMat },
+      { x: 1.55, z: sanctumZ - 1.1, mat: this.silverMat },
+      { x: -1.55, z: sanctumZ - 1.1, mat: this.copperMat }
+    ];
+    potLocations.forEach(p => {
+      const potBody = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 14, 12),
+        p.mat
+      );
+      potBody.scale.set(1.0, 0.85, 1.0);
+      potBody.position.set(p.x, 2.82, p.z);
+      sanctumGroup.add(potBody);
+
+      const potRim = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.10, 0.08, 12),
+        p.mat
+      );
+      potRim.position.set(p.x, 2.98, p.z);
+      sanctumGroup.add(potRim);
+    });
+
+    // Silver Donation Hundi Box on Altar Front Left (Photos 1 & 2)
+    const hundiMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.7, 0.55, 0.45),
+      this.silverMat
+    );
+    hundiMesh.position.set(-1.45, 2.82, sanctumZ + 0.95);
+    sanctumGroup.add(hundiMesh);
+
+    // =========================================================================
+    // 5. THE OPULENT HANGING CHHATRA (CANOPY UMBRELLA) WITH BELLS & RUDRAKSHA MALAS
+    // Suspended directly above the Swayambhu Lingam (Photos 1, 2, 3)
+    // =========================================================================
+    const chhatraGroup = new THREE.Group();
+    chhatraGroup.position.set(0, 6.4, sanctumZ);
+
+    // Heavy ceremonial hanging chain
+    const hangChain = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 2.0, 8),
+      this.goldMat
+    );
+    hangChain.position.y = 1.0;
     chhatraGroup.add(hangChain);
 
-    // Ornate Chhatra Dome / Umbrella
+    // Gilded Repoussé Chhatra Canopy Dome
     const chhatraDome = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.8, 2.2, 0.4, 24),
-      new THREE.MeshStandardMaterial({ color: 0xf1f5f9, metalness: 0.85, roughness: 0.25 })
+      new THREE.CylinderGeometry(1.6, 2.2, 0.45, 28),
+      this.goldMat
     );
     chhatraDome.position.y = 0;
     chhatraGroup.add(chhatraDome);
 
-    // Hanging silver drops/bells along perimeter of Chhatra
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 10) {
-      const bx = Math.cos(a) * 2.1;
-      const bz = Math.sin(a) * 2.1;
+    // Dome apex finial
+    const chhatraApex = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 16, 16),
+      this.goldMat
+    );
+    chhatraApex.position.y = 0.35;
+    chhatraGroup.add(chhatraApex);
+
+    // Perimeter Ring of Dangling Silver/Gold Bells & Drops (Photos 1, 2, 3)
+    const numBells = 24;
+    for (let b = 0; b < numBells; b++) {
+      const angle = (b / numBells) * Math.PI * 2;
+      const bx = Math.cos(angle) * 2.15;
+      const bz = Math.sin(angle) * 2.15;
+
       const drop = new THREE.Mesh(
         new THREE.SphereGeometry(0.08, 8, 8),
+        this.silverMat
+      );
+      drop.position.set(bx, -0.35, bz);
+      chhatraGroup.add(drop);
+
+      // Hanging string
+      const str = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.01, 0.01, 0.25, 4),
         this.goldMat
       );
-      drop.position.set(bx, -0.3, bz);
-      chhatraGroup.add(drop);
+      str.position.set(bx, -0.15, bz);
+      chhatraGroup.add(str);
     }
-    sanctumGroup.add(chhatraGroup);
 
-    // 4. Silver offerings donation box / hundi & brass vessels (as in photos)
-    const hundiMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 0.6, 0.5),
-      new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.3 })
-    );
-    hundiMesh.position.set(-1.4, 2.5, sanctumZ + 0.9);
-    sanctumGroup.add(hundiMesh);
-
-    // Brass lota vessel
-    const lotaMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.18, 0.25, 12),
+    // Central Sacred Hanging Ghanta (Brass Bell) under the umbrella
+    const centerBell = new THREE.Mesh(
+      new THREE.ConeGeometry(0.28, 0.52, 16),
       this.brassMat
     );
-    lotaMesh.position.set(1.3, 2.45, sanctumZ + 0.8);
-    sanctumGroup.add(lotaMesh);
+    centerBell.rotation.x = Math.PI;
+    centerBell.position.set(0, -0.7, 0);
+    chhatraGroup.add(centerBell);
 
-    // Flower offerings & Bilva Patra scattered on altar
-    for (let f = 0; f < 20; f++) {
-      const fx = (Math.random() - 0.5) * 2.4;
-      const fz = sanctumZ + (Math.random() - 0.5) * 1.8;
-      const isGreen = Math.random() > 0.6;
-      const flowerMat = isGreen ? 
-        new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 }) : 
-        new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.8 });
-      const fMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.04, 6), flowerMat);
-      fMesh.position.set(fx, 2.45, fz);
-      sanctumGroup.add(fMesh);
+    // Cascading Rudraksha Malas draped downward around the central bell (Photo 3)
+    const rudrakshaMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.85 });
+    for (let m = 0; m < 8; m++) {
+      const angle = (m / 8) * Math.PI * 2;
+      const mx = Math.cos(angle) * 0.75;
+      const mz = Math.sin(angle) * 0.75;
+      for (let bead = 0; bead < 9; bead++) {
+        const by = -0.35 - bead * 0.14;
+        const bMesh = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), rudrakshaMat);
+        bMesh.position.set(mx * (1 - bead * 0.04), by, mz * (1 - bead * 0.04));
+        chhatraGroup.add(bMesh);
+      }
     }
 
-    // 5. Glowing Brass Diyas
-    const diyaPositions = [
-      { x: -1.8, z: sanctumZ + 1.2 },
-      { x: 1.8, z: sanctumZ + 1.2 },
-      { x: -1.6, z: sanctumZ - 0.8 },
-      { x: 1.6, z: sanctumZ - 0.8 }
-    ];
+    sanctumGroup.add(chhatraGroup);
 
-    diyaPositions.forEach(pos => {
-      const diyaBowl = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18, 0.1, 0.14, 12),
-        this.brassMat
-      );
-      diyaBowl.position.set(pos.x, 2.2, pos.z);
-      sanctumGroup.add(diyaBowl);
+    // =========================================================================
+    // 6. LEFT WALL DAIS PANTHEON OF SCULPTED MURTIS (Photo 2)
+    // Seated Lord Shiva, Parvati, Ganesha, and Rishis on raised stone bench
+    // =========================================================================
+    const murtiDais = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.65, 5.8),
+      this.stoneMat
+    );
+    murtiDais.position.set(-4.2, 2.2, sanctumZ - 0.2);
+    sanctumGroup.add(murtiDais);
 
-      const flame = new THREE.Mesh(
-        new THREE.ConeGeometry(0.06, 0.2, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffaa00 })
-      );
-      flame.position.set(pos.x, 2.36, pos.z);
-      sanctumGroup.add(flame);
+    // Murtis Material: sacred dark carved bronze/stone with chandan touches
+    const murtiMat = new THREE.MeshStandardMaterial({
+      color: 0x383530,
+      roughness: 0.45,
+      metalness: 0.35
     });
 
-    // 6. Radiant Sanctum Golden Light (Shining brightly out through the front door!)
-    const sanctumMainLight = new THREE.PointLight(0xffaa22, 3.8, 22, 1.1);
-    sanctumMainLight.position.set(0, 4.2, sanctumZ + 1.0);
+    const murtis = [
+      { name: 'Lord Shiva & Trishul', z: sanctumZ - 2.0, scale: 1.15, hasTrishul: true },
+      { name: 'Parvati Mata', z: sanctumZ - 1.0, scale: 1.05, hasTrishul: false },
+      { name: 'Lord Ganesha', z: sanctumZ + 0.0, scale: 0.95, hasTrishul: false },
+      { name: 'Rishi / Pandava 1', z: sanctumZ + 1.0, scale: 0.90, hasTrishul: false },
+      { name: 'Rishi / Pandava 2', z: sanctumZ + 2.0, scale: 0.90, hasTrishul: false }
+    ];
+
+    murtis.forEach(m => {
+      const mGroup = new THREE.Group();
+      mGroup.position.set(-4.1, 2.55, m.z);
+
+      // Seated Cross-Legged Body
+      const mBase = new THREE.Mesh(new THREE.BoxGeometry(0.7 * m.scale, 0.25 * m.scale, 0.5 * m.scale), murtiMat);
+      mGroup.add(mBase);
+
+      const mTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * m.scale, 0.24 * m.scale, 0.65 * m.scale, 10), murtiMat);
+      mTorso.position.y = 0.45 * m.scale;
+      mGroup.add(mTorso);
+
+      const mHead = new THREE.Mesh(new THREE.SphereGeometry(0.16 * m.scale, 10, 10), murtiMat);
+      mHead.position.y = 0.9 * m.scale;
+      mGroup.add(mHead);
+
+      // Gold crown / halo
+      const mCrown = new THREE.Mesh(new THREE.ConeGeometry(0.12 * m.scale, 0.25 * m.scale, 8), this.goldMat);
+      mCrown.position.y = 1.12 * m.scale;
+      mGroup.add(mCrown);
+
+      // Shiva Trishul (for first murti)
+      if (m.hasTrishul) {
+        const trishPole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.8, 6), this.brassMat);
+        trishPole.position.set(0.35, 0.9, 0.1);
+        mGroup.add(trishPole);
+
+        const trishTop = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 6), this.brassMat);
+        trishTop.position.set(0.35, 1.9, 0.1);
+        mGroup.add(trishTop);
+      }
+
+      sanctumGroup.add(mGroup);
+    });
+
+    // =========================================================================
+    // 7. SEATED VEDIC PRIEST (PUJARI) CONDUCTING PUJA (Photos 1 & 3)
+    // Saffron robes, seated beside the altar offering prayers
+    // =========================================================================
+    const priestGroup = new THREE.Group();
+    priestGroup.position.set(2.4, 1.9, sanctumZ + 0.8);
+
+    // Carpet / Asana
+    const asana = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.08, 1.2),
+      new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.8 })
+    );
+    asana.position.y = 0.04;
+    priestGroup.add(asana);
+
+    // Seated folded legs
+    const priestLegs = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.35, 0.65),
+      this.saffronMat
+    );
+    priestLegs.position.y = 0.22;
+    priestGroup.add(priestLegs);
+
+    // Torso in saffron vastra
+    const priestTorso = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.24, 0.28, 0.75, 10),
+      this.saffronMat
+    );
+    priestTorso.position.y = 0.72;
+    priestGroup.add(priestTorso);
+
+    // Head with holy tilak
+    const priestHead = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 10, 10),
+      new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 })
+    );
+    priestHead.position.y = 1.22;
+    priestGroup.add(priestHead);
+
+    sanctumGroup.add(priestGroup);
+
+    // =========================================================================
+    // 8. TALL BRASS DEEPSTAMBHA (MULTI-TIER DIYA TOWERS) & FLOOR DIYAS (Photo 3)
+    // =========================================================================
+    [-2.2, 2.2].forEach(dx => {
+      const standGroup = new THREE.Group();
+      standGroup.position.set(dx, 1.9, sanctumZ + 2.8);
+
+      const sBase = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 0.15, 12), this.brassMat);
+      standGroup.add(sBase);
+
+      const sPole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6, 8), this.brassMat);
+      sPole.position.y = 0.85;
+      standGroup.add(sPole);
+
+      // Multi-tier diya oil plates
+      [0.6, 1.0, 1.4].forEach(ty => {
+        const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.22 - ty * 0.05, 0.18, 0.06, 12), this.brassMat);
+        plate.position.y = ty;
+        standGroup.add(plate);
+
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.14, 6), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+        flame.position.y = ty + 0.1;
+        standGroup.add(flame);
+      });
+
+      sanctumGroup.add(standGroup);
+    });
+
+    // =========================================================================
+    // 9. RADIANT GOLDEN SANCTUM ILLUMINATION (Spilling warmly through entrance)
+    // =========================================================================
+    const sanctumMainLight = new THREE.PointLight(0xffaa22, 4.2, 26, 1.1);
+    sanctumMainLight.position.set(0, 4.2, sanctumZ + 0.8);
     sanctumGroup.add(sanctumMainLight);
-    this.pointLights.push({ light: sanctumMainLight, baseIntensity: 3.8 });
+    this.pointLights.push({ light: sanctumMainLight, baseIntensity: 4.2 });
+
+    const sanctumWarmFill = new THREE.PointLight(0xff7711, 2.2, 18, 1.4);
+    sanctumWarmFill.position.set(0, 2.8, sanctumZ - 0.5);
+    sanctumGroup.add(sanctumWarmFill);
+    this.pointLights.push({ light: sanctumWarmFill, baseIntensity: 2.2 });
 
     // Clickable target for sanctum darshan
-    lingam.userData = { isSanctum: true };
-    photoStandMesh.userData = { isSanctum: true };
-    peethamMesh.userData = { isSanctum: true };
-    this.sanctumMeshes = [lingam, photoStandMesh, peethamMesh];
+    lingamMesh.userData = { isSanctum: true };
+    lowerPeetham.userData = { isSanctum: true };
+    this.sanctumMeshes = [lingamMesh, lowerPeetham, backWallMesh];
 
     this.group.add(sanctumGroup);
   }
